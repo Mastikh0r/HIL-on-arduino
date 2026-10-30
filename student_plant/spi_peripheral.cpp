@@ -6,8 +6,8 @@
 // Write spi_peripheral.cpp. You are an SPI peripheral (mode 0, MSB first) on the
 // hardware pins: CS = D10 (PB2), COPI = D11, CIPO = D12 (PB4), SCK = D13.
 // Do NOT call SPI.begin() (that makes you a controller). Use SPCR/SPDR and ISR(SPI_STC_vect).
-extern bool intbFault; // when true, publish() never pulls INTB low
-
+//extern bool intbFault; // when true, publish() never pulls INTB low
+bool intbFault = false;
 static const uint8_t A_CONFIG1    = 0x00;
 static const uint8_t A_CONFIG2    = 0x01;
 static const uint8_t A_INT_STATUS = 0x02;
