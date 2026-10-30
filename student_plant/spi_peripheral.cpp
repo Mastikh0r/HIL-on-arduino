@@ -154,8 +154,31 @@ ISR(PCINT0_vect) {
 }
 
 
-//TODO
-void spiPeripheralBegin();             // configure pins, SPCR, interrupts, defaults
+void spiPeripheralBegin() {
+    // All 4 pins start as inputs
+    DDRB = DDRB & ~(1 << PB2) & ~(1 << PB3) & ~(1 << PB4) & ~(1 << PB5);
+
+    //set default values
+    for (uint8_t i = 0; i < IMG_SIZE; i++) regs[i] = 0;
+    for (uint8_t i = 0; i < N_RESULT_REGS; i++) results[i] = 0;
+    regs[A_CONFIG2] = CFG2_DEFAULT;
+    
+    //starts with INTB released
+    intbRelease();
+    state = 0;
+    startReq = false;
+    
+    //SPE enables the SPI hardware 
+    //SPIE enables the byte interrupt
+    SPCR = (1 << SPE) | (1 << SPIE);
+    SPDR = 0;
+    
+    //PCIE0 enables pin-change interrupts 
+    PCICR  = PCICR | (1 << PCIE0);
+    //PCINT2 masks it to only D10. 
+    PCMSK0 = PCMSK0 | (1 << PCINT2);
+    // prevents INTB pin toggling from triggering the ISR
+}
 
 //TODO
 uint8_t getReg(uint8_t addr);          // read a byte from the register image
