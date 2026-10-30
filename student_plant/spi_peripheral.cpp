@@ -22,7 +22,7 @@ static volatile uint32_t results[N_RESULT_REGS];
 
 static volatile bool startReq = false;
 
-static volatile uint8_t state = 0;   // 0 = expect command, 1 = data bytes
+static volatile uint8_t state = 0;   // 0 = expect command 1 = data bytes
 static volatile bool isWrite = false;
 static volatile bool autoInc = false;
 static volatile uint8_t curAddr = 0;
@@ -180,10 +180,29 @@ void spiPeripheralBegin() {
     // prevents INTB pin toggling from triggering the ISR
 }
 
-//TODO
-uint8_t getReg(uint8_t addr);          // read a byte from the register image
 
-//TODO
+uint8_t getReg(uint8_t addr) {
+    //get relative index if a result
+    if (isResult(addr)) return (uint8_t)(results[addr - A_RES0] & 0xFF);
+    //in img range
+    if (addr < IMG_SIZE) return regs[addr];
+    //fallback
+    return 0;
+}
+
+
 // Copy r[] into the result registers, set INT_STATUS = status, then pull INTB low
 // (unless intbFault). Do the copy with interrupts off so a read can't see half a result.
-void publish(const uint32_t r[N_RESULT_REGS], uint8_t status);
+void publish(const uint32_t r[N_RESULT_REGS], uint8_t status) {
+    //currnt state
+    uint8_t sreg = SREG;
+    //clear interupts
+    cli();
+    //copy to results
+    for (uint8_t i = 0; i < N_RESULT_REGS; i++) results[i] = r[i] & 0x7FFFFFUL;
+    //update status
+    regs[A_INT_STATUS] = status;
+    if (!intbFault) intbPullLow();
+    //restore state
+    SREG = sreg;
+}
